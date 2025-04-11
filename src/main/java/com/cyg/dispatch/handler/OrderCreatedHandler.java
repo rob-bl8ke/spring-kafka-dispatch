@@ -3,6 +3,7 @@ package com.cyg.dispatch.handler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import com.cyg.dispatch.message.OrderCreated;
 import com.cyg.dispatch.service.DispatchService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class OrderCreatedHandler {
         topics = "order.created", 
         groupId = "dispatch.order.created.consumer"
     )
-    public void listen(String payload) {
+    public void listen(OrderCreated payload) {
         dispatchService.process(payload);
     }
 }

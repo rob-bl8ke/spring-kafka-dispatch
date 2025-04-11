@@ -3,6 +3,7 @@ package com.cyg.dispatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.cyg.dispatch.message.OrderCreated;
 import com.cyg.dispatch.service.DispatchService;
 
 public class DispatchServiceTests {
@@ -15,6 +16,6 @@ public class DispatchServiceTests {
 
     @Test
     void process() {
-        service.process("payload");;
+        service.process(new OrderCreated());;
     }
 }

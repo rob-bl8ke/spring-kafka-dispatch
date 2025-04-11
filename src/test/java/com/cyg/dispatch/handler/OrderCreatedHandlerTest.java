@@ -4,10 +4,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.cyg.dispatch.message.OrderCreated;
 import com.cyg.dispatch.service.DispatchService;
+import com.cyg.dispatch.util.TestEventData;
 
 public class OrderCreatedHandlerTest {
 
@@ -24,11 +28,9 @@ public class OrderCreatedHandlerTest {
 
     @Test
     void listen() {
-        // Simulate the Kafka message consumption and test the handler's behavior
-        // You can use mocking frameworks like Mockito to mock dependencies
-        // and verify interactions with the DispatchService
-        handler.listen("payload");
+        OrderCreated payload = TestEventData.buildOrderCreatedEvent(UUID.randomUUID(), UUID.randomUUID().toString());
+        handler.listen(payload);
         // Add assertions or verifications as needed
-        verify(dispatchServiceMock, times(1)).process("payload");
+        verify(dispatchServiceMock, times(1)).process(payload);
     }
 }
