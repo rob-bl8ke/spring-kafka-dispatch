@@ -1,4 +1,18 @@
 
+# Run the application
+
+Can use `mvn spring-boot:run` to watch the console for messages, but only once you've created an `order.created` topic.
+
+Better to debug it so you can see how the handler gets hit. The handler is seperated from the service so as to improve the ability to test.
+
+Create two terminals, one to `docker-compose up -d` the Kafka instance and the other to send messages.
+
+```bash
+kafka-console-producer --topic order.created --bootstrap-server localhost:9092
+```
+
+Run the tests and see how the separation of the service from the handler makes testing easier with the help of Mockito.
+
 # Kafka (in a container)
 
 The [approach used by this page](https://dev.to/deeshath/apache-kafka-kraft-mode-setup-5nj) for the `docker-compose.yml` file does not work and Kafka will exit 1. Issue is discussed on [this Stack Exchange discussion thread](https://stackoverflow.com/questions/79392483/kafka-integration-with-wireguard-nonroutable-meta-address-0-0-0-0) and the fix/workaround is that this:
