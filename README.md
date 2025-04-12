@@ -153,7 +153,7 @@ If the above steps don't work, you can try running docker-compose with elevated 
 sudo docker-compose up
 ```
 
-### Spring Boot Code
+### The consumer handler
 
 - The Kafka consumer handler is seperated from the service so as to improve the ability to test and to follow the best practice of separating concerns.
 - Run the tests and see how the separation of the service from the handler makes testing easier with the help of Mockito.
@@ -176,12 +176,7 @@ With this message (as an example), all hell breaks loose...
 
 To be clear: the message is polled again and again resulting in the same deserialization exception, effectively blocking the topic  and preventing other messages from being processed.
 
-However, with this configuration, the scenario can be avoided:
-
-```
-spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.springframework.kafka.support.serializer.JsonDeserializer
-```
+However, by using the `org.springframework.kafka.support.serializer.ErrorHandlingDeserializer` the problem is resolved/
 
 This configuration ensures that deserialization errors are handled gracefully by the `ErrorHandlingDeserializer`, preventing poison pills from causing continuous polling and failure. Instead, the problematic message is skipped or handled according to your error-handling strategy, allowing the consumer to continue processing other messages.
 
@@ -190,6 +185,22 @@ This deserializer wraps the actual deserializer (in this case, JsonDeserializer)
 When a deserialization error occurs, the `ErrorHandlingDeserializer` prevents the exception from propagating to the Kafka consumer. Spring Kafka's error handling mechanisms (e.g., `SeekToCurrentErrorHandler`) can then skip the problematic message and move on to the next one, avoiding an infinite loop of polling and failure.
 
 You can configure Spring Kafka to log the error, send the problematic message to a dead-letter topic, or take other actions, ensuring the poison pill does not disrupt normal processing.
+
+### [Configuring Deserialization in Spring Beans](https://www.udemy.com/course/introduction-to-kafka-with-spring-boot/learn/lecture/38164902#notes)
+
+The `DispatchConfiguration` class configures the Kafka consumer for the application.
+
+-  A consumer factory defines the strategy to create the consumer instance. It uses `JsonDeserializer` to deserialize messages into the `OrderCreated` class
+
+
+- The Listener Container Factory provides a `ConcurrentKafkaListenerContainerFactory` to manage Kafka listeners with the configured consumer factory.
+
+This class centralizes Kafka consumer configuration, ensuring error resilience and type-safe message processing. And this has the advantage of a being able to more easily define multiple beans for different scenarios, eg. different listeners may require different timeouts periods.
+
+It gives the application compile time confirmation that the classes are correctly defined and on the application class path.
+
+
+
 
 # References
 
