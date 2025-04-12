@@ -1,7 +1,3 @@
-# Original source article https://dev.to/deeshath/apache-kafka-kraft-mode-setup-5nj
-# Issues with localhost: https://stackoverflow.com/questions/79392483/kafka-integration-with-wireguard-nonroutable-meta-address-0-0-0-0
-name: 'stream'
-version: '3.8'
 services:
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -28,4 +24,4 @@ services:
       CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk"  # A unique ID for the Kafka cluster.
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./data:/var/lib/kafka/data  # Store Kafka logs on your local machine.
+      - /var/lib/kafka/data
