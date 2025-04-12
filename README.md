@@ -1,7 +1,7 @@
 
 # Run the application
 
-Can use `mvn spring-boot:run` to watch the console for messages, but only once an `order.created` topic is created. See Kafka commands below. Might be better to debug it so one can see how the handler gets hit.
+Launch the application with `mvn spring-boot:run`.
 
 To debug in Visual Studio Code, one can use this configuration in one's `launch.json`.
 
@@ -158,9 +158,44 @@ sudo docker-compose up
 - The Kafka consumer handler is seperated from the service so as to improve the ability to test and to follow the best practice of separating concerns.
 - Run the tests and see how the separation of the service from the handler makes testing easier with the help of Mockito.
 
+### [Avoiding the Poison Pill](https://www.udemy.com/course/introduction-to-kafka-with-spring-boot/learn/lecture/38115908#notes)
+
+If an exception is thrown while deserializing a message, bad things will happen because continuous polling will keep throwing the exception.
+
+So this message will be fine...
+
+```json
+{"orderId":"0e9631fd-fab4-41a6-8b1d-63e4b2602658","item":"item-1"}
+```
+
+With this message (as an example), all hell breaks loose...
+
+```json
+{"orderId":"0e9631fd-fab4-41a6-8b1d-63e4b2602658"}
+```
+
+To be clear: the message is polled again and again resulting in the same deserialization exception, effectively blocking the topic  and preventing other messages from being processed.
+
+However, with this configuration, the scenario can be avoided:
+
+```
+spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.springframework.kafka.support.serializer.JsonDeserializer
+```
+
+This configuration ensures that deserialization errors are handled gracefully by the `ErrorHandlingDeserializer`, preventing poison pills from causing continuous polling and failure. Instead, the problematic message is skipped or handled according to your error-handling strategy, allowing the consumer to continue processing other messages.
+
+This deserializer wraps the actual deserializer (in this case, JsonDeserializer) and handles deserialization errors gracefully. If a message cannot be deserialized (e.g., due to invalid JSON or mismatched types), the ErrorHandlingDeserializer catches the exception and returns a null value or an error record instead of throwing an exception.
+
+When a deserialization error occurs, the `ErrorHandlingDeserializer` prevents the exception from propagating to the Kafka consumer. Spring Kafka's error handling mechanisms (e.g., `SeekToCurrentErrorHandler`) can then skip the problematic message and move on to the next one, avoiding an infinite loop of polling and failure.
+
+You can configure Spring Kafka to log the error, send the problematic message to a dead-letter topic, or take other actions, ensuring the poison pill does not disrupt normal processing.
+
 # References
 
 - [Getting started with Apache Kafka](https://www.youtube.com/playlist?list=PLa7VYi0yPIH0xeDp2Iu1q_esSYeNsIxkZ) dives into the fundamentals of Apache Kafka and is an official seires of YouTube videos compiled by Confluent.
 - Useful Udemy Course - [Introduction to Kafka with Spring Boot](https://www.udemy.com/course/introduction-to-kafka-with-spring-boot/?couponCode=25BBPMXPLOYCTRL) with John Thompson et al.
 - [Confluent Developer](https://developer.confluent.io/) - Learn about the fundamentals of event streaming with Kafka and Flink, and the surrounding ecosystem.
+- [Download a local copy of Apache Kafka](https://kafka.apache.org/downloads). Later versions of Kafka come with Docker options.
+- [Install Kafka on wsl2](https://www.udemy.com/course/introduction-to-kafka-with-spring-boot/learn/lecture/41291818#notes). Requires Udemy course
 - [Your private Notion notes](https://www.notion.so/Work-192bf9f5949880f09a51cac75b0fccbf?p=196bf9f5949880c5bbe2dadd7ce12d30&pm=s)

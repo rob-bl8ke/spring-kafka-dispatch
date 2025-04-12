@@ -2,9 +2,15 @@ spring:
     kafka:
         bootstrap-servers: localhost:9092
         consumer:
-            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            # Using the ErrorHandlingDeserializer to handle deserialization errors
+            # Spring will realize the poison pill and skip the message on the next poll
+            value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
             properties:
                 spring:
+                    deserializer:
+                        value:
+                            delegate:
+                                class: org.springframework.kafka.support.serializer.JsonDeserializer
                     json:
                         value:
                             default:
