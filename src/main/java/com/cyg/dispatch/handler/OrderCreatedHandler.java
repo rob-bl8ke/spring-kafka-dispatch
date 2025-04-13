@@ -23,6 +23,16 @@ public class OrderCreatedHandler {
         containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(OrderCreated payload) {
-        dispatchService.process(payload);
+        log.info("Received message: {}", payload);
+        try {
+            dispatchService.process(payload);
+        } catch (Exception e) {
+            // Don't throw an exception here.
+            // If you throw an exception, and it  isn't handled.consumerFactory
+            // the message will be reprocessed and the offset will not be committed.
+            // This way, the message is marked as processed and offset is committed.
+            // If you want to retry the message, you can use a retry template or a dead letter topic.
+            log.error("Processing failure: {}", e.getMessage(), e);
+        }
     }
 }

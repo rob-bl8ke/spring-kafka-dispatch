@@ -1,5 +1,6 @@
 package com.cyg.dispatch.handler;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,8 +28,17 @@ public class OrderCreatedHandlerTest {
     }
 
     @Test
-    void listen() {
+    void listen_Success() throws Exception {
         OrderCreated payload = TestEventData.buildOrderCreatedEvent(UUID.randomUUID(), UUID.randomUUID().toString());
+        handler.listen(payload);
+        // Add assertions or verifications as needed
+        verify(dispatchServiceMock, times(1)).process(payload);
+
+    }
+    @Test
+    void listen_ServiceThrowsException() throws Exception {
+        OrderCreated payload = TestEventData.buildOrderCreatedEvent(UUID.randomUUID(), UUID.randomUUID().toString());
+        doThrow(new RuntimeException("Service Failure")).when(dispatchServiceMock).process(payload);
         handler.listen(payload);
         // Add assertions or verifications as needed
         verify(dispatchServiceMock, times(1)).process(payload);

@@ -199,8 +199,28 @@ This class centralizes Kafka consumer configuration, ensuring error resilience a
 
 It gives the application compile time confirmation that the classes are correctly defined and on the application class path.
 
+## [Producing messages](https://www.udemy.com/course/introduction-to-kafka-with-spring-boot/learn/lecture/38164910#notes)
 
+The `DispatchService` sends an `OrderDispatched` event. KafkaTemplate is used to send the event.
 
+By default, Kafka producers send messages off asynchronously (fire-and-forget). So if the message fails to be sent to the broker, one will not know about it. One can make the sending of messages synchronous by doing this:
+
+```java
+// returns the CompletableFuture (.get())... or errors out
+kafkaProducer.send(ORDER_DISPATCHED_TOPIC, orderDispatched).get();
+```
+
+This will result in an exception if the message is not written to a broker successfully. This must be handled in the Handler class, otherwise the application will enter a retry loop. The exception is handled in the `OrderCreatedHandler` listen method so as to mark the message as processed and it will not be re-consumed.
+
+Note the sunny and rainy day tests added to the `OrderCreatedHandlerTest` and `DispatchServiceTests`.
+
+The `DispatchServiceTests` will mock the `KafkaTemplate` and tell the mock how to behave. It either returns a `CompletableFuture` if its successful, otherwise an exception will be thrown. The tests verify that both happen as expected. Similarly, tests are written for `OrderCreatedHandlerTest`.
+
+Using the console, one can manually check that the order is being dispatched successfully by the application by creating a consumer to listen to the topic.
+
+```
+ kafka-console-consumer --bootstrap-server localhost:9092 --topic order.dispatched
+```
 
 # References
 
